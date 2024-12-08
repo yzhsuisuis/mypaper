@@ -7,14 +7,14 @@
             </swiper-item>
         </swiper>
         {{readImgs}}
+        {{currentInfo}}
 
         <view class="mask" v-if="maskState">
             <view class="goBack"  @click="goBack"
                   :style="{top:getStatusBarHeight()+'px'}">
                 <uni-icons type="back" color="#fff" size="20"></uni-icons>
             </view>
-<!--            细节+1-->
-            <view class="count">{{currentIndex+1}}/ {{classList.length}}</view>
+            <view class="count">{{currentIndex+1}} / {{classList.length}}</view>
             <view class="time">
                 <uni-dateformat :date="new Date()" format="hh:mm"></uni-dateformat>
             </view>
@@ -29,7 +29,7 @@
 
                 <view class="box" @click="clickScore">
                     <uni-icons type="star" size="28"></uni-icons>
-                    <view class="text">5分</view>
+                    <view class="text">{{currentInfo.score}}分</view>
                 </view>
 
                 <view class="box">
@@ -52,38 +52,40 @@
                     <view class="content">
                         <view class="row">
                             <view class="label">壁纸ID：</view>
-                            <text selectable class="value">12312312adfa</text>
+                            <text selectable class="value">{{currentInfo._id}}</text>
                         </view>
-
+                        <!--
                         <view class="row">
-                            <view class="label">分类：</view>
-                            <text class="value class">明星美女</text>
+                          <view class="label">分类：</view>
+                          <text class="value class">明星美女</text>
                         </view>
-
+                         -->
                         <view class="row">
                             <view class="label">发布者：</view>
-                            <text class="value">咸虾米</text>
+                            <text class="value">{{currentInfo.nickname}}</text>
                         </view>
 
                         <view class="row">
                             <text class="label">评分：</text>
                             <view class='value roteBox'>
-                                <uni-rate readonly touchable value="3.5" size="16"/>
-                                <text class="score">5分</text>
+                                <uni-rate readonly touchable :value="currentInfo.score" size="16"/>
+                                <text class="score">{{currentInfo.score}}分</text>
                             </view>
                         </view>
 
                         <view class="row">
                             <text class="label">摘要：</text>
                             <view class='value'>
-                                摘要文字内容填充部分，摘要文字内容填充部分，摘要文字内容填充部分，摘要文字内容填充部分。
+                                {{currentInfo.description}}
                             </view>
                         </view>
 
                         <view class="row">
                             <text class="label">标签：</text>
                             <view class='value tabs'>
-                                <view class="tab" v-for="item in 3">标签名</view>
+                                <view class="tab" v-for="tab in currentInfo.tabs">
+                                    {{tab}}
+                                </view>
                             </view>
                         </view>
 
@@ -100,19 +102,24 @@
             <view class="scorePopup">
                 <view class="popHeader">
                     <view></view>
-                    <view class="title">壁纸评分</view>
+                    <view class="title">{{isScore?'评分过了~':'壁纸评分'}}</view>
                     <view class="close" @click="clickScoreClose">
                         <uni-icons type="closeempty" size="18"													color="#999"></uni-icons>
                     </view>
                 </view>
 
                 <view class="content">
-                    <uni-rate v-model="userScore" allowHalf/>
+                    <uni-rate v-model="userScore" allowHalf
+                              :disabled="isScore"
+                              disabled-color="#FFCA3E"
+                    />
                     <text class="text">{{userScore}}分</text>
                 </view>
 
                 <view class="footer">
-                    <button @click="submitScore" :disabled="!userScore" type="default" size="mini" plain >确认评分</button>
+                    <button @click="submitScore"
+                            :disabled="!userScore || isScore"
+                            type="default" size="mini" plain >确认评分</button>
                 </view>
             </view>
         </uni-popup>
@@ -122,15 +129,18 @@
 
 <script setup>
 import { ref } from 'vue';
-import {getStatusBarHeight} from "@/utils/system.js"
 import {onLoad} from "@dcloudio/uni-app"
+import {getStatusBarHeight} from "@/utils/system.js"
+import {apiGetSetupScore} from "@/api/apis.js"
 const maskState =ref(true);
 const infoPopup = ref(null);
 const scorePopup = ref(null);
 const userScore =ref(0)
-const currentIndex = ref(0);
-const currentId = ref(null)
 const classList =ref([]);
+const currentId = ref(null);
+const currentIndex = ref(0)
+const currentInfo = ref(null);
+const isScore = ref(false);
 const readImgs = ref([]);
 
 
@@ -145,6 +155,7 @@ classList.value = storgClassList.map(item=>{
         picurl:item.smallPicurl.replace("_small.webp",".jpg")
     }
 })
+
 console.log(JSON.stringify(classList.value, null, 2))
 
 onLoad((e)=>{
@@ -153,6 +164,8 @@ onLoad((e)=>{
     // 在没有缓存的情况下,是默认找不到的
     currentIndex.value = classList.value.findIndex(item=>item._id == currentId.value)
     console.log("currentIndex: " + JSON.stringify(currentIndex.value, null, 2));
+    // 巨坑的一个xiaobug
+    currentInfo.value = classList.value[currentIndex.value]
 
     readImgsFun();
 
@@ -165,6 +178,8 @@ const swiperChange = (e)=>{
     currentIndex.value = e.detail.current;
     console.log("滑动页面:"+ JSON.stringify(e,null,2));
     console.log(e);
+    currentInfo.value = classList.value[currentIndex]
+    // 记住这里是吧缓存中的url ,兑现成实际的地址
     readImgsFun()
 }
 function readImgsFun(){
@@ -180,8 +195,8 @@ function readImgsFun(){
     readImgs.value = [...new Set(readImgs.value)];
 }
 
-//点击info弹窗
 const clickInfo = ()=>{
+    // 对应的技术那个组件
     infoPopup.value.open();
 }
 
@@ -192,16 +207,41 @@ const clickInfoClose = ()=>{
 
 //评分弹窗
 const clickScore=()=>{
+    // 如果已经评过分了,这里是根据ip来决定的,
+    if(currentInfo.value.userScore){
+        isScore.value  = true;
+        userScore.value = currentInfo.value.userScore;
+    }
     scorePopup.value.open();
 }
 //关闭评分框
 const clickScoreClose=()=>{
     scorePopup.value.close();
+    userScore.value = 0;
+    isScore.value = false;
 }
 
 //确认评分
-const submitScore=()=>{
-    console.log("评分了");
+const submitScore=async ()=>{
+    uni.showLoading({
+        title:"加载中..."
+    })
+    let {classid,_id:wallId} = currentInfo.value;
+    let res = await apiGetSetupScore({
+        classid,
+        wallId,
+        userScore:userScore.value
+    })
+    uni.hideLoading();
+    if(res.errCode === 0){
+        uni.showToast({
+            title:"评分成功",
+            icon:"none"
+        })
+        classList.value[currentIndex.value].userScore = userScore.value;
+        uni.setStorageSync("storgClassList",classList.value);
+        clickScoreClose();
+    }
 }
 
 
