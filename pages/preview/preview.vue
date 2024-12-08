@@ -1,17 +1,20 @@
 <template>
     <view class="preview">
-        <swiper circular>
-            <swiper-item v-for="item in 5">
-                <image @click="maskChange" src="../../common/images/preview1.jpg" mode="aspectFill"></image>
+        <swiper circular :current="currentIndex" @change="swiperChange">
+            <swiper-item v-for="(item,index) in classList" :key="item._id">
+<!--                只加载当前索引对应的图片左右的-->
+                <image v-if="readImgs.includes(index)" @click="maskChange" :src="item.picurl" mode="aspectFill"></image>
             </swiper-item>
         </swiper>
+        {{readImgs}}
 
         <view class="mask" v-if="maskState">
             <view class="goBack"  @click="goBack"
                   :style="{top:getStatusBarHeight()+'px'}">
                 <uni-icons type="back" color="#fff" size="20"></uni-icons>
             </view>
-            <view class="count">3 / 9</view>
+<!--            细节+1-->
+            <view class="count">{{currentIndex+1}}/ {{classList.length}}</view>
             <view class="time">
                 <uni-dateformat :date="new Date()" format="hh:mm"></uni-dateformat>
             </view>
@@ -120,13 +123,62 @@
 <script setup>
 import { ref } from 'vue';
 import {getStatusBarHeight} from "@/utils/system.js"
+import {onLoad} from "@dcloudio/uni-app"
 const maskState =ref(true);
 const infoPopup = ref(null);
 const scorePopup = ref(null);
 const userScore =ref(0)
+const currentIndex = ref(0);
+const currentId = ref(null)
+const classList =ref([]);
+const readImgs = ref([]);
 
 
 
+const storgClassList = uni.getStorageSync("storgClassList") || [];
+// 这里只是变了一下字符串,没有进行实质性的加载,真正能
+classList.value = storgClassList.map(item=>{
+    // todo 这里是很细节的,相当于把原来的缓存的每一项,展开后,有重新多加了一个属性
+
+    return {
+        ...item,
+        picurl:item.smallPicurl.replace("_small.webp",".jpg")
+    }
+})
+console.log(JSON.stringify(classList.value, null, 2))
+
+onLoad((e)=>{
+    console.log("e"+JSON.stringify(e, null, 2))
+    currentId.value = e.id;
+    // 在没有缓存的情况下,是默认找不到的
+    currentIndex.value = classList.value.findIndex(item=>item._id == currentId.value)
+    console.log("currentIndex: " + JSON.stringify(currentIndex.value, null, 2));
+
+    readImgsFun();
+
+})
+
+// 用户左右滑动壁纸后,3/9 的3 实现+1
+// todo 仔细看一下,这个界面传参的e
+const swiperChange = (e)=>{
+
+    currentIndex.value = e.detail.current;
+    console.log("滑动页面:"+ JSON.stringify(e,null,2));
+    console.log(e);
+    readImgsFun()
+}
+function readImgsFun(){
+    readImgs.value.push(
+        currentIndex.value<=0 ? classList.value.length-1 : currentIndex.value-1,
+        currentIndex.value,
+        // currentIndex.value>=classList.value.length-1 ? 0 : currentIndex.value+1
+        // 这里采用的是取模运算
+        (currentIndex.value+1)%classList.value.length
+    )
+    // 这里通过new Set去重
+    console.log(new Set(readImgs.value))
+    readImgs.value = [...new Set(readImgs.value)];
+}
 
 //点击info弹窗
 const clickInfo = ()=>{

@@ -1,13 +1,26 @@
 <template>
+<!-- 数据长度为0 ,且还有数据的时候 ,会加载 ,和下面的那一个是互补的-->
+    <view class="loadingLayout" v-if="!classList.length && !noData">
+        <uni-load-more status="loading"></uni-load-more>
+    </view>
     <view class="classlist">
         <view class="content">
-            <navigator url="/pages/preview/preview" class="item"
+<!--            预期行为 : 3/12 ,用户点击后计入精图 ,为了得到这个12,我们不能每次都去请求的得到完整的,而是通过缓存,然后缓存赋值给classList,-->
+<!--行为: 用户点击缩略图后,往preview页面传递一个 _id参数 ,preview页面通过onLoad()拿到id -->
+<!--            通过对id的对比获取-->
+<!--            -->
+            <navigator :url="'/pages/preview/preview?id='+item._id" class="item"
                        v-for="item in classList"
                        :key="item._id"
             >
                 <image :src="item.smallPicurl" mode="aspectFill"></image>
             </navigator>
         </view>
+    </view>
+
+<!--    不禁感叹这个真的很秀-->
+    <view class="loadingLayout" v-if="classList.length || noData">
+        <uni-load-more :status="noData?'noMore':'loading'"></uni-load-more>
     </view>
 </template>
 
@@ -55,7 +68,9 @@ const getClassList = async ()=>{
     // ...展开 ,二维变一维
     classList.value = [...classList.value , ...res.data];
     if(queryParams.pageSize > res.data.length) noData.value = true;
-    console.log("getClassList"+res.data);
+    // 每次存入都会覆盖之前
+    uni.setStorageSync("storgClassList",classList.value);
+    console.log(classList.value);
 }
 
 

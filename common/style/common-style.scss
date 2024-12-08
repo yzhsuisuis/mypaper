@@ -11,12 +11,12 @@ view,swiper,swiper-item{
 	min-height: 80vh;
 }
 
-// loading的布局
+// loading的布局,这里是对加载时候的显示
 .loadingLayout{
 	padding:30rpx 0;
 }
 
-// 安全区域的高度
+// 安全区域的高度,这里是小程序端防止home键的遮住了 -- 没有更多了
 .safe-area-inset-bottom{
 	height: env(safe-area-inset-bottom);
 }
