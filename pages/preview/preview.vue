@@ -21,7 +21,7 @@
             <view class="date">
                 <uni-dateformat :date="new Date()" format="MM月dd日"></uni-dateformat>
             </view>
-            <view class="footer">
+            <view class="footer" v-if="currentInfo">
                 <view class="box" @click="clickInfo">
                     <uni-icons type="info" size="28"></uni-icons>
                     <view class="text">信息</view>
@@ -50,7 +50,7 @@
                     </view>
                 </view>
                 <scroll-view scroll-y>
-                    <view class="content">
+                    <view class="content" v-if="currentInfo">
                         <view class="row">
                             <view class="label">壁纸ID：</view>
                             <text selectable class="value">{{currentInfo._id}}</text>
@@ -84,7 +84,7 @@
                         <view class="row">
                             <text class="label">标签：</text>
                             <view class='value tabs'>
-                                <view class="tab" v-for="tab in currentInfo.tabs">
+                                <view class="tab" v-for="tab in currentInfo.tabs":key="tab">
                                     {{tab}}
                                 </view>
                             </view>
@@ -132,7 +132,10 @@
 import { ref } from 'vue';
 import {onLoad} from "@dcloudio/uni-app"
 import {getStatusBarHeight} from "@/utils/system.js"
-import {apiGetSetupScore} from "@/api/apis.js"
+import {
+    apiGetSetupScore,
+    apiWriteDownload
+} from "@/api/apis.js"
 const maskState =ref(true);
 const infoPopup = ref(null);
 const scorePopup = ref(null);
@@ -258,32 +261,91 @@ const goBack= ()=>{
     uni.navigateBack()
 }
 //点击下载
-const clickDownload = ()=>{
+const clickDownload = async () => {
+
     // #ifdef H5
     uni.showModal({
-        content:"请长按保存壁纸",
-        showCancel:false
+        content: "请长按保存壁纸",
+        showCancel: false
     })
     // #endif
 
     // #ifndef H5
-    uni.getImageInfo({
-        src:currentInfo.value.picurl,
-        success: (res) => {
+    try {
 
-            uni.saveImageToPhotosAlbum({
-                filePath:res.path,
-                success: (res) => {
-                    console.log(res);
-                }
-            })
+        uni.showLoading({
+            title: "下载中...",
+            mask: true
+        })
+        let {
+            classid,
+            _id: wallId
+        } = currentInfo.value;
+        let res = await apiWriteDownload({
+            classid,
+            wallId
+        })
+        if (res.errCode != 0) throw res;
+        uni.getImageInfo({
+            src: currentInfo.value.picurl,
+            success: (res) => {
+                uni.saveImageToPhotosAlbum({
+                    filePath: res.path,
+                    success: (res) => {
+                        uni.showToast({
+                            title: "保存成功，请到相册查看",
+                            icon: "none"
+                        })
+                    },
+                    fail: err => {
+                        if (err.errMsg == 'saveImageToPhotosAlbum:fail cancel') {
+                            uni.showToast({
+                                title: '保存失败，请重新点击下载',
+                                icon: "none"
+                            })
+                            return;
+                        }
+                        uni.showModal({
+                            title: "授权提示",
+                            content: "需要授权保存相册",
+                            success: res => {
+                                if (res.confirm) {
+                                    uni.openSetting({
+                                        success: (setting) => {
+                                            console.log(
+                                                setting);
+                                            if (setting
+                                                .authSetting[
+                                                'scope.writePhotosAlbum'
+                                                ]) {
+                                                uni.showToast({
+                                                    title: "获取授权成功",
+                                                    icon: "none"
+                                                })
+                                            } else {
+                                                uni.showToast({
+                                                    title: "获取权限失败",
+                                                    icon: "none"
+                                                })
+                                            }
+                                        }
+                                    })
+                                }
+                            }
+                        })
+                    },
+                    complete: () => {
+                        uni.hideLoading();
+                    }
+                })
 
-        }
-    })
+            }
+        })
 
-
-
-
+    } catch (err) {
+        console.log(err);
+        uni.hideLoading();
+    }
     // #endif
 }
 </script>
