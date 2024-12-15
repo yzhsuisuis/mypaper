@@ -48,3 +48,35 @@ export function apiWriteDownload(data={}){
 		data
 	})
 }
+
+// 点击分享的图片后,会单独通过share类型查找一张图片
+export function apiDetailWall(data={}){
+	return request({
+		url:"/detailWall",
+		data
+	})
+}
+// 获取用户的详细信息
+export function apiUserInfo(data={}){
+	return request({
+		url:"/userInfo",
+		data
+	})
+}
+
+
+export function apiGetHistoryList(data={}){
+	return request({
+		url:"/userWallList",
+		data
+	})
+}
+
+
+
+export function apiNoticeDetail(data={}){
+	return request({
+		url:"/wallNewsDetail",
+		data
+	})
+}

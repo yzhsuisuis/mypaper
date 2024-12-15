@@ -16,3 +16,18 @@ export function compareTimestamp(timestamp) {
     return null;
   }
 }
+// 当某些需要传id的界面没有传id的时候,就弹窗然后,跳转到开始界面
+export function gotoHome(){
+  uni.showModal({
+    title:"提示",
+    content:"页面有误将返回首页",
+    showCancel:false,
+    success: (res) => {
+      if(res.confirm){
+        uni.reLaunch({
+          url:"/pages/index/index"
+        })
+      }
+    }
+  })
+}

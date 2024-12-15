@@ -130,11 +130,14 @@
 
 <script setup>
 import { ref } from 'vue';
-import {onLoad} from "@dcloudio/uni-app"
+import {
+    onLoad,onShareAppMessage,onShareTimeline
+} from "@dcloudio/uni-app"
 import {getStatusBarHeight} from "@/utils/system.js"
 import {
     apiGetSetupScore,
-    apiWriteDownload
+    apiWriteDownload,
+    apiDetailWall
 } from "@/api/apis.js"
 const maskState =ref(true);
 const infoPopup = ref(null);
@@ -162,9 +165,20 @@ classList.value = storgClassList.map(item=>{
 
 console.log(JSON.stringify(classList.value, null, 2))
 
-onLoad((e)=>{
+onLoad(async (e)=>{
     console.log("e"+JSON.stringify(e, null, 2))
     currentId.value = e.id;
+    if(e.type == 'share'){
+        // 如果是通过share,分享进来的话,他本地是没有缓存的,所以和这个时候需要,单独开一个方法来,来查询图片
+        let res = await apiDetailWall({id:currentId.value});
+        // 这里和上面类似,res是图片的缩略图地址,必须将他的尾部更改成.jpg的形式
+        classList.value = res.data.map(item=>{
+            return {
+                ...item,
+                picurl: item.smallPicurl.replace("_small.webp", ".jpg")
+            }
+        })
+    }
     // 在没有缓存的情况下,是默认找不到的
     currentIndex.value = classList.value.findIndex(item=>item._id == currentId.value)
     console.log("currentIndex: " + JSON.stringify(currentIndex.value, null, 2));
@@ -257,8 +271,17 @@ const maskChange = ()=>{
 
 
 //返回上一页
-const goBack= ()=>{
-    uni.navigateBack()
+const goBack = () => {
+    uni.navigateBack({
+        success: () => {
+
+        },
+        fail: (err) => {
+            uni.reLaunch({
+                url:"/pages/index/index"
+            })
+        }
+    })
 }
 //点击下载
 const clickDownload = async () => {
@@ -348,6 +371,24 @@ const clickDownload = async () => {
     }
     // #endif
 }
+
+//分享给好友
+onShareAppMessage((e)=>{
+    return {
+        title:"尼的壁纸",
+        path:"/pages/preview/preview?id="+currentId.value+"&type=share"
+    }
+})
+
+
+//分享朋友圈
+onShareTimeline(()=>{
+    return {
+        // 这里是很细节的,如果是通过分享,点进来的话,那么这个type = share
+        title:"尼的壁纸",
+        query:"id="+currentId.value+"&type=share"
+    }
+})
 </script>
 
 <style lang="scss" scoped>

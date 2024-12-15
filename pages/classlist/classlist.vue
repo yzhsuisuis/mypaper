@@ -26,8 +26,9 @@
 
 <script setup>
 import { ref } from 'vue';
-import {onLoad,onReachBottom} from "@dcloudio/uni-app"
-import {apiGetClassList} from "@/api/apis.js"
+import {apiGetClassList,apiGetHistoryList} from "@/api/apis.js"
+import {onLoad,onUnload,onReachBottom,onShareAppMessage,onShareTimeline} from "@dcloudio/uni-app"
+import {gotoHome} from "@/utils/common.js"
 //分类列表数据
 const classList = ref([]);
 const noData = ref(false)
@@ -38,12 +39,16 @@ const queryParams = {
     pageNum:1,
     pageSize:12
 }
+let pageName;
 // 细节点: todo
 //onLoad的加载是晚于set up语法糖的,肯定是已经
 onLoad((e)=>{
     console.log(e)
-    let {id=null,name=null} = e;
-    queryParams.classid = id;
+    let {id=null,name=null,type=null} = e;
+    if(type) queryParams.type = type;
+    if(id) queryParams.classid = id;
+    pageName = name;
+
     console.log(id,name);
     //修改导航标题
     uni.setNavigationBarTitle({
@@ -64,7 +69,10 @@ onReachBottom(()=>{
 //获取分类列表网络数据
 const getClassList = async ()=>{
     console.log(JSON.stringify(queryParams, null, 2))
-    let res = await apiGetClassList(queryParams);
+    let res;
+    if(queryParams.classid) res = await apiGetClassList(queryParams);
+    if(queryParams.type) res = await apiGetHistoryList(queryParams);
+
     // ...展开 ,二维变一维
     classList.value = [...classList.value , ...res.data];
     if(queryParams.pageSize > res.data.length) noData.value = true;
@@ -72,6 +80,26 @@ const getClassList = async ()=>{
     uni.setStorageSync("storgClassList",classList.value);
     console.log(classList.value);
 }
+//分享给好友
+onShareAppMessage((e)=>{
+    return {
+        title:"尼的壁纸-"+pageName,
+        path:"/pages/classlist/classlist?id="+queryParams.classid+"&name="+pageName
+    }
+})
+
+
+//分享朋友圈
+onShareTimeline(()=>{
+    return {
+        title:"尼的壁纸-"+pageName,
+        query:"id="+queryParams.classid+"&name="+pageName
+    }
+})
+
+onUnload(()=>{
+    uni.removeStorageSync("storgClassList")
+})
 
 
 
