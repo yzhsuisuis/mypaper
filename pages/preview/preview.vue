@@ -32,7 +32,8 @@
                     <view class="text">{{currentInfo.score}}分</view>
                 </view>
 
-                <view class="box">
+
+                <view class="box" @click="clickDownload">
                     <uni-icons type="download" size="23"></uni-icons>
                     <view class="text">下载</view>
                 </view>
@@ -178,7 +179,8 @@ const swiperChange = (e)=>{
     currentIndex.value = e.detail.current;
     console.log("滑动页面:"+ JSON.stringify(e,null,2));
     console.log(e);
-    currentInfo.value = classList.value[currentIndex]
+    // 这里直接
+    currentInfo.value = classList.value[currentIndex.value]
     // 记住这里是吧缓存中的url ,兑现成实际的地址
     readImgsFun()
 }
@@ -254,6 +256,35 @@ const maskChange = ()=>{
 //返回上一页
 const goBack= ()=>{
     uni.navigateBack()
+}
+//点击下载
+const clickDownload = ()=>{
+    // #ifdef H5
+    uni.showModal({
+        content:"请长按保存壁纸",
+        showCancel:false
+    })
+    // #endif
+
+    // #ifndef H5
+    uni.getImageInfo({
+        src:currentInfo.value.picurl,
+        success: (res) => {
+
+            uni.saveImageToPhotosAlbum({
+                filePath:res.path,
+                success: (res) => {
+                    console.log(res);
+                }
+            })
+
+        }
+    })
+
+
+
+
+    // #endif
 }
 </script>
 
