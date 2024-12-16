@@ -58,7 +58,8 @@
 			<common-title>
 				<template #name>专题精选</template>
 				<template #custom>
-					<navigator url="" class="more">More+</navigator>
+<!--					必须加上reLaunch才能够 跳转到tabbar-->
+					<navigator url="/pages/classify/classify" open-type="reLaunch" class="more">More+</navigator>
 				</template>
 			</common-title>
 
@@ -82,10 +83,15 @@ import { ref } from 'vue';
 import {onShareAppMessage,onShareTimeline} from "@dcloudio/uni-app"
 import {apiGetBanner,apiGetDayRandom,apiGetNotice,apiGetClassify} from "@/api/apis.js"
 
+
+
+
 const bannerList= ref([]);
 const randomList = ref([]);
 const noticeList = ref([]);
 const classifyList = ref([]);
+
+
 
 const getBanner = async ()=>{
 	let res =await apiGetBanner();
@@ -97,9 +103,15 @@ const getDayRandom = async ()=>{
 	randomList.value = res.data
 }
 
+// 现在不打算拿这个公告了
 const getNotice = async()=>{
 	let res =await apiGetNotice({select:true});
-	noticeList.value = res.data
+	console.log(res);
+	res.data.forEach(item =>{
+		item.title = "尼的壁纸公告"
+	});
+	console.log(res);
+	noticeList.value= res.data
 }
 
 const getClassify =async()=>{

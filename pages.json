@@ -59,6 +59,13 @@
         "navigationBarTitleText": "搜索",
         "enablePullDownRefresh": false
       }
+    },
+    {
+      "path": "pages/login/login",
+      "style": {
+        "navigationBarTitleText": "登录",
+        "enablePullDownRefresh": false
+      }
     }
   ],
   "globalStyle": {
@@ -86,6 +93,13 @@
       {
         "text": "我的",
         "pagePath": "pages/user/user",
+        "iconPath": "static/images/tabBar/user.png",
+        "selectedIconPath": "static/images/tabBar/user-h.png"
+      }
+    ,
+      {
+        "text": "登录",
+        "pagePath": "pages/login/login",
         "iconPath": "static/images/tabBar/user.png",
         "selectedIconPath": "static/images/tabBar/user-h.png"
       }

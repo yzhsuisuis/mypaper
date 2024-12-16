@@ -6,8 +6,9 @@
                 <image v-if="readImgs.includes(index)" @click="maskChange" :src="item.picurl" mode="aspectFill"></image>
             </swiper-item>
         </swiper>
-        {{readImgs}}
-        {{currentInfo}}
+<!--        这里的注解暂时先给消去-->
+<!--        {{readImgs}}-->
+<!--        {{currentInfo}}-->
 
         <view class="mask" v-if="maskState">
             <view class="goBack"  @click="goBack"
@@ -287,6 +288,7 @@ const goBack = () => {
 const clickDownload = async () => {
 
     // #ifdef H5
+
     uni.showModal({
         content: "请长按保存壁纸",
         showCancel: false
