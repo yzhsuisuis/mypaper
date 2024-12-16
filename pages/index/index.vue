@@ -1,5 +1,7 @@
 <template>
 	<view class="homeLayout pageBg">
+
+<!--		这里相当于自带推荐的bar-->
 		<custom-nav-bar title="推荐"></custom-nav-bar>
 		<view class="banner">
 			<swiper circular indicator-dots indicator-color="rgba(255,255,255,0.5)"
