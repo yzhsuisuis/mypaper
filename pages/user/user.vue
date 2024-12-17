@@ -3,7 +3,7 @@
 		<view :style="{height:getNavBarHeight()+'px'}"></view>
 		<view class="userInfo">
 			<view class="avatar">
-				<image src="../../static/images/xxmLogo.png" mode="aspectFill"></image>
+				<image src="../../static/images/favicon.png" mode="aspectFill"></image>
 			</view>
 			<view class="ip">{{userinfo.IP}}</view>
 			<view class="address"> from ：
