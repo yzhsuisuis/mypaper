@@ -40,9 +40,9 @@ defineProps({
 		left:0;
 		width: 100%;
 		z-index: 10;
-		background:
-				linear-gradient(to bottom,transparent,#fff 400rpx),
-				linear-gradient(to right,#beecd8 20%,#F4E2D8);
+		background: rgb(2,0,36);
+		background: linear-gradient(90deg, rgba(2,0,36,1) 0%, rgba(203,203,255,1) 0%, rgba(65,217,237,1) 97%);
+
 		.statusBar{}
 		.titleBar{
 			display: flex;

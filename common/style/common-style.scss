@@ -5,11 +5,11 @@ view,swiper,swiper-item{
 
 // 背景色
 .pageBg{
-	background: 
-	linear-gradient(to bottom,transparent,#fff 400rpx), // 上到下，透明色到白色，白色从400rpx开始
-	linear-gradient(to right,#beecd8 20%,#F4E2D8); //左到有
-	min-height: 80vh;
+	background: rgb(2,0,36);
+	background: linear-gradient(90deg, rgba(2,0,36,1) 0%, rgba(203,203,255,1) 0%, rgba(65,217,237,1) 97%);
+	min-height: 100vh;
 }
+
 
 // loading的布局,这里是对加载时候的显示
 .loadingLayout{
